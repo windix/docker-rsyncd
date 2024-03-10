@@ -1,13 +1,18 @@
 #!/bin/sh
+
 VOLUME=${VOLUME:-/volume}
-ALLOW=${ALLOW:-192.168.0.0/16 172.16.0.0/12}
-USER=${USER:-nobody}
-GROUP=${GROUP:-nogroup}
+ALLOW=${ALLOW:-127.0.0.1 192.168.0.0/16 172.16.0.0/12}
+UID=${UID:-1000}
+GID=${GID:-1000}
 
 mkdir -p ${VOLUME}
 
-getent group ${GROUP} > /dev/null || addgroup ${GROUP}
-getent passwd ${USER} > /dev/null || adduser -D -H -G ${GROUP} ${USER}
+getent group ${GID} > /dev/null || addgroup --gid ${GID} rsync-group
+getent passwd ${UID} > /dev/null || adduser --system --uid ${UID} --gid ${GID} rsync-user
+
+GROUP=`getent group ${GID} | cut -d: -f1`
+USER=`getent passwd ${UID} | cut -d: -f1`
+
 chown -R ${USER}:${GROUP} ${VOLUME}
 
 cat <<EOF > /etc/rsyncd.conf

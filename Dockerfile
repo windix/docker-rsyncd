@@ -1,10 +1,10 @@
-FROM debian:jessie
+FROM debian:bookworm-slim
 MAINTAINER David Stefan <stefda@gmail.com>
 
-RUN apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends rsync && \
-  apt-get clean autoclean && \
-  apt-get autoremove -y && \
+RUN apt update && \
+  DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends rsync && \
+  apt clean autoclean && \
+  apt autoremove -y && \
   rm -rf /var/lib/apt/lists/*
 
 EXPOSE 873
