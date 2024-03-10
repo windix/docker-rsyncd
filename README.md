@@ -1,46 +1,44 @@
-# rsync
+# docker-rsyncd
 
-A minimalist image with rsync daemon. It is intended to be used as a volume and shared among containers where standard volume sharing results in poor read performance.
+A minimalist image with rsync daemon. The intention is to run a rsync daemon on host with docker without the need of rsyncd setup (e.g. running on a NAS).
 
-# Usage
+The benefit compare to transfer over SSH is the SPEED (avoid SSH overhead). From my testing can be at least 2x faster!
 
-The simplest use case is to run the image and map its 873 port:
+## Docker Hub
+
+This has been published to [windix/docker-rsyncd](https://hub.docker.com/r/windix/docker-rsyncd) on docker-hub.
+
+## Usage
+
+The simplest use case:
+
+On server side, start rsyncd for current directory and map its 873 port (default rsyncd port):
+
 ```bash
-$ docker run stefda/rsync -p 873:873
+$ docker run -p 873:873 -v $(pwd):/volume windix/docker-rsyncd
+
 ```
 
-The command above spins up a container that will listen on port 873 for connections over the native rsync protocol. Syncing files is then as easy as `rsync -rtR <file-or-directory> rsync://<docker-host-ip>:873/volume`.
-
-# Configuration
-
-The module path, owning user, group and allowed hosts are all configurable via environmental variables. Launch fully customised container like so:
+On client side, to transfer files over the native rsync protocol:
 
 ```bash
-$ docker run stefda/rsync -p 873:873 -e VOLUME=/my/volume -e USER=www-data -e GROUP=www-data -e ALLOW="192.168.0.0/16 10.0.0.0/16"
+$ rsync -av --progress <file-or-directory> rsync://<docker-host-ip>:873/volume
+
 ```
 
-# Using the image with docker-compose
+## Configuration
 
-An example usage with docker-compose:
- 
-```yaml
-version: '2'
-services:
-  rsync-volume:
-    image: stefda/rsync
-    volumes:
-      - /var/www/app/src
-    environment:
-      VOLUME: /var/www/app
-      USER: www-data
-      GROUP: www-data
-    ports:
-      - 10873:873
-      
-  web:
-    image: my-app-image
-    volumes_from:
-      - rsync-volume
+To map with your host UID and GID to avoid permission issues, you can pass `UID` and `GID` environment variables correspondingly (default value is `1000` for both).
+
+Also you can specify `ALLOW` for IP whitelist (default is `127.0.0.1 192.168.0.0/16 10.0.0.0/16`)
+
+Here is a more complicated example:
+
+```bash
+$ docker run -p 873:873 -e VOLUME=/incoming -e UID=1000 -e GID=100 -e ALLOW="127.0.0.1 192.168.0.0/16 10.0.0.0/16" -v /mnt/user/incoming:/incoming windix/docker-rsyncd
+
 ```
 
-As defined, the `web` service will have volumes from the `rsync-volume` service and so any files synced into the rsync container will be immediately available in `web` as well. 
+## Thanks
+
+This is based on original work from <https://github.com/stefda/docker-rsync>

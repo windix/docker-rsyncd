@@ -1,5 +1,5 @@
 FROM debian:bookworm-slim
-MAINTAINER David Stefan <stefda@gmail.com>
+LABEL maintainer="Windix <windix@gmail.com> / David Stefan <stefda@gmail.com>"
 
 RUN apt update && \
   DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends rsync && \
